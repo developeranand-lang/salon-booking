@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Salon Appointment Booking</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 450px; margin: 30px auto; padding: 20px; background: #f9f9f9; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    h2 { text-align: center; color: #333; }
+    .tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid #ddd; }
+    .tab { flex: 1; padding: 10px; text-align: center; cursor: pointer; font-weight: bold; background: #eee; border: none; }
+    .tab.active { background: #007bff; color: white; }
+    .form-section { display: none; }
+    .form-section.active { display: block; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; }
+    input, select, button { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+    button { background-color: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
+    button:hover { background-color: #218838; }
+    .cancel-btn { background-color: #dc3545; }
+    .cancel-btn:hover { background-color: #c82333; }
+    .slot-legend { font-size: 12px; color: #666; margin-top: 4px; }
+  </style>
+</head>
+<body>
+
+  <h2>Salon Booking Portal</h2>
+
+  <!-- Navigation Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('book')">Book Appointment</button>
+    <button class="tab" onclick="switchTab('cancel')">Cancel Booking</button>
+  </div>
+
+  <!-- BOOKING SECTION -->
+  <div id="bookSection" class="form-section active">
+    <form id="bookingForm">
+      <div class="form-group">
+        <label>Customer Name</label>
+        <input type="text" id="bookName" required placeholder="e.g., John Doe">
+      </div>
+
+      <div class="form-group">
+        <label>Mobile Number</label>
+        <input type="tel" id="bookPhone" required placeholder="e.g., 98343948">
+      </div>
+
+      <div class="form-group">
+        <label>Select Service</label>
+        <select id="service" required>
+          <option value="">-- Choose Service --</option>
+          <option value="Hair Cut">Hair Cut</option>
+          <option value="Trimmer">Trimmer</option>
+          <option value="Beard Trim">Beard Trim</option>
+          <option value="Hair Coloring">Hair Coloring</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Appointment Date</label>
+        <input type="date" id="bookDate" required onchange="fetchAvailableSlots()">
+      </div>
+
+      <div class="form-group">
+        <label>Available Time Slots (10:00 AM - 7:00 PM)</label>
+        <select id="bookTime" required>
+          <option value="">-- Select Date First --</option>
+        </select>
+        <div class="slot-legend">Already booked slots will automatically disappear.</div>
+      </div>
+
+      <button type="submit" id="bookBtn">Confirm Booking</button>
+    </form>
+  </div>
+
+  <!-- CANCELLATION SECTION -->
+  <div id="cancelSection" class="form-section">
+    <form id="cancelForm">
+      <div class="form-group">
+        <label>Customer Name</label>
+        <input type="text" id="cancelName" required placeholder="Enter your registered name">
+      </div>
+
+      <div class="form-group">
+        <label>Mobile Number</label>
+        <input type="tel" id="cancelPhone" required placeholder="Enter your registered mobile">
+      </div>
+
+      <div class="form-group">
+        <label>Appointment Date</label>
+        <input type="date" id="cancelDate" required>
+      </div>
+
+      <div class="form-group">
+        <label>Appointment Time Slot</label>
+        <select id="cancelTime" required>
+          <option value="">-- Select Time Slot --</option>
+        </select>
+      </div>
+
+      <button type="submit" class="cancel-btn" id="cancelBtn">Cancel My Booking</button>
+    </form>
+  </div>
+
+  <script>
+    // ==========================================
+    // PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL BELOW
+    // ==========================================
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwsxFtxCRvrXTS_v2p7Sfdcjve21xqF8NUmHcNWEZBuGCFjTc4IJWQleA8udXSrt7yp0w/exec";
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+      
+      if (tab === 'book') {
+        document.querySelectorAll('.tab')[0].classList.add('active');
+        document.getElementById('bookSection').classList.add('active');
+      } else {
+        document.querySelectorAll('.tab')[1].classList.add('active');
+        document.getElementById('cancelSection').classList.add('active');
+      }
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    document.getElementById('bookDate').min = todayStr;
+    document.getElementById('cancelDate').min = todayStr;
+
+    function generateAllSlots() {
+      let slots = [];
+      let startHour = 10; 
+      let endHour = 19;   
+      
+      for (let h = startHour; h < endHour; h++) {
+        for (let m = 0; m < 60; m += 30) {
+          let hour12 = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+          let ampm = h >= 12 ? 'PM' : 'AM';
+          let minStr = m === 0 ? '00' : '30';
+          slots.push(`${hour12}:${minStr} ${ampm}`);
+        }
+      }
+      return slots;
+    }
+
+    function populateCancelSlots() {
+      const cancelTimeSelect = document.getElementById('cancelTime');
+      cancelTimeSelect.innerHTML = '<option value="">-- Select Time Slot --</option>';
+      const allSlots = generateAllSlots();
+      allSlots.forEach(slot => {
+        let opt = document.createElement('option');
+        opt.value = slot;
+        opt.textContent = slot;
+        cancelTimeSelect.appendChild(opt);
+      });
+    }
+    populateCancelSlots();
+
+    // Fetch available slots using GET to prevent CORS preflight blocks
+    async function fetchAvailableSlots() {
+      const date = document.getElementById('bookDate').value;
+      const timeSelect = document.getElementById('bookTime');
+      
+      if (!date) return;
+
+      timeSelect.innerHTML = '<option value="">Loading available slots...</option>';
+
+      let bookedTimes = [];
+
+      try {
+        const response = await fetch(`${SCRIPT_URL}?action=get_slots&date=${date}`);
+        const result = await response.json();
+        if (result.status === 'success') {
+          bookedTimes = result.bookedTimes || [];
+        }
+      } catch (err) {
+        console.warn("Could not fetch booked slots, displaying all slots as fallback.", err);
+      }
+
+      const allSlots = generateAllSlots();
+      timeSelect.innerHTML = '<option value="">-- Select Time Slot --</option>';
+
+      let availableCount = 0;
+      allSlots.forEach(slot => {
+        if (!bookedTimes.includes(slot)) {
+          let opt = document.createElement('option');
+          opt.value = slot;
+          opt.textContent = slot;
+          timeSelect.appendChild(opt);
+          availableCount++;
+        }
+      });
+
+      if (availableCount === 0) {
+        timeSelect.innerHTML = '<option value="">All slots booked for this date!</option>';
+      }
+    }
+
+    // Booking submission
+    document.getElementById('bookingForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btn = document.getElementById('bookBtn');
+      btn.disabled = true;
+      btn.innerText = "Processing...";
+
+      const payload = {
+        action: 'book',
+        name: document.getElementById('bookName').value,
+        phone: document.getElementById('bookPhone').value,
+        service: document.getElementById('service').value,
+        date: document.getElementById('bookDate').value,
+        time: document.getElementById('bookTime').value
+      };
+
+      try {
+        const response = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        alert(result.message);
+        if (result.status === 'success') {
+          document.getElementById('bookingForm').reset();
+          document.getElementById('bookTime').innerHTML = '<option value="">-- Select Date First --</option>';
+        }
+      } catch (err) {
+        alert("Booking failed. Please check your connection.");
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Confirm Booking";
+      }
+    });
+
+    // Cancellation submission
+    document.getElementById('cancelForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btn = document.getElementById('cancelBtn');
+      btn.disabled = true;
+      btn.innerText = "Processing cancellation...";
+
+      const payload = {
+        action: 'cancel',
+        name: document.getElementById('cancelName').value,
+        phone: document.getElementById('cancelPhone').value,
+        date: document.getElementById('cancelDate').value,
+        time: document.getElementById('cancelTime').value
+      };
+
+      try {
+        const response = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        alert(result.message);
+        if (result.status === 'success') {
+          document.getElementById('cancelForm').reset();
+          populateCancelSlots();
+        }
+      } catch (err) {
+        alert("Cancellation failed. Please check your details.");
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Cancel My Booking";
+      }
+    });
+  </script>
+</body>
+</html>
