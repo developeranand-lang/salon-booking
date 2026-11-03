@@ -1,267 +1,336 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Salon Appointment Booking</title>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 450px; margin: 30px auto; padding: 20px; background: #f9f9f9; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    h2 { text-align: center; color: #333; }
-    .tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid #ddd; }
-    .tab { flex: 1; padding: 10px; text-align: center; cursor: pointer; font-weight: bold; background: #eee; border: none; }
-    .tab.active { background: #007bff; color: white; }
-    .form-section { display: none; }
-    .form-section.active { display: block; }
-    .form-group { margin-bottom: 15px; }
-    label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; }
-    input, select, button { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-    button { background-color: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
-    button:hover { background-color: #218838; }
-    .cancel-btn { background-color: #dc3545; }
-    .cancel-btn:hover { background-color: #c82333; }
-    .slot-legend { font-size: 12px; color: #666; margin-top: 4px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Glamour & Co. | Book Your Salon Appointment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #c9a24d;
+    --gold-dark: #a98532;
+    --ink: #1c1a1a;
+    --muted: #6b6560;
+    --green: #2e9e5b;
+    --red: #d64550;
+    --card: rgba(255,255,255,0.96);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Poppins', Arial, sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+    background:
+      linear-gradient(rgba(20,16,14,0.72), rgba(20,16,14,0.80)),
+      url('https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1800&q=70') center/cover fixed,
+      #2a2220;
+  }
+  header { text-align: center; color: #fff; padding: 48px 20px 24px; }
+  header .tag { letter-spacing: 4px; font-size: 12px; color: var(--gold); text-transform: uppercase; }
+  header h1 { font-family: 'Playfair Display', serif; font-size: clamp(32px, 6vw, 52px); margin: 8px 0; }
+  header p { color: #ddd; font-size: 15px; }
+
+  .wrapper { max-width: 560px; margin: 0 auto; padding: 0 16px 50px; }
+  .card { background: var(--card); border-radius: 16px; padding: 26px; box-shadow: 0 20px 50px rgba(0,0,0,0.35); }
+
+  .tabs { display: flex; background: #f1ece3; border-radius: 10px; padding: 4px; margin-bottom: 22px; }
+  .tab { flex: 1; border: none; background: transparent; padding: 11px; border-radius: 8px; font: 600 14px 'Poppins'; color: var(--muted); cursor: pointer; transition: .2s; }
+  .tab.active { background: var(--gold); color: #fff; box-shadow: 0 3px 10px rgba(201,162,77,.45); }
+
+  .form-group { margin-bottom: 16px; }
+  label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #4a443f; }
+  input, select {
+    width: 100%; padding: 12px 14px; font: 400 15px 'Poppins';
+    border: 1.5px solid #e2dbd0; border-radius: 10px; background: #fff; transition: .2s;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,162,77,.2); }
+  input.invalid { border-color: var(--red); }
+  .hint { font-size: 12px; color: var(--red); margin-top: 4px; min-height: 16px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); margin-bottom: 8px; flex-wrap: wrap; }
+  .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+  .legend .l-av::before { background: var(--green); }
+  .legend .l-bk::before { background: #c9c5bf; }
+  .legend .l-se::before { background: var(--gold); }
+
+  .slot-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .slot-btn { padding: 11px 4px; border: none; border-radius: 10px; font: 600 13px 'Poppins'; cursor: pointer; transition: .15s; }
+  .slot-available { background: var(--green); color: #fff; }
+  .slot-available:hover { filter: brightness(.92); transform: translateY(-1px); }
+  .slot-available.selected { background: var(--gold); box-shadow: 0 0 0 3px rgba(201,162,77,.35); }
+  .slot-booked { background: #dedad4; color: #98928b; cursor: not-allowed; text-decoration: line-through; }
+  .slot-note { grid-column: 1 / -1; text-align: center; color: var(--muted); font-size: 14px; padding: 12px 0; }
+
+  .btn { width: 100%; border: none; padding: 14px; border-radius: 10px; font: 600 16px 'Poppins'; color: #fff; cursor: pointer; margin-top: 6px; transition: .2s; }
+  .btn-book { background: linear-gradient(135deg, var(--gold), var(--gold-dark)); }
+  .btn-cancel { background: var(--red); }
+  .btn:hover { filter: brightness(.93); }
+  .btn:disabled { opacity: .6; cursor: wait; }
+
+  #message { margin-top: 16px; text-align: center; font-weight: 500; font-size: 14px; padding: 0; border-radius: 10px; }
+  #message.show { padding: 12px; }
+  #message.info { background: #eef3ff; color: #234; }
+  #message.ok { background: #e7f7ee; color: #17743f; }
+  #message.err { background: #fdeaec; color: #a3202c; }
+
+  .gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 22px; }
+  .gallery div { height: 90px; border-radius: 12px; background-size: cover; background-position: center; background-color: #3a302c; border: 2px solid rgba(255,255,255,.15); }
+  footer { text-align: center; color: #bbb; font-size: 12px; margin-top: 22px; }
+
+  .hidden { display: none; }
+</style>
 </head>
 <body>
 
-  <h2>Salon Booking Portal</h2>
+<header>
+  <div class="tag">Hair • Beard • Skin</div>
+  <h1>Glamour &amp; Co. Salon</h1>
+  <p>Book your appointment in less than a minute</p>
+</header>
 
-  <!-- Navigation Tabs -->
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('book')">Book Appointment</button>
-    <button class="tab" onclick="switchTab('cancel')">Cancel Booking</button>
+<div class="wrapper">
+  <div class="card">
+
+    <div class="tabs">
+      <button class="tab active" id="tabBook" type="button">Book Appointment</button>
+      <button class="tab" id="tabCancel" type="button">Cancel Booking</button>
+    </div>
+
+    <div class="form-group">
+      <label for="name">Full Name</label>
+      <input type="text" id="name" placeholder="Enter your full name" autocomplete="name">
+    </div>
+
+    <div class="form-group">
+      <label for="phone">Mobile Number</label>
+      <input type="tel" id="phone" placeholder="10-digit mobile number" inputmode="numeric" maxlength="14" autocomplete="tel">
+      <div class="hint" id="phoneHint"></div>
+    </div>
+
+    <div class="form-group" id="serviceGroup">
+      <label for="service">Service</label>
+      <select id="service">
+        <option>Hair Cut</option>
+        <option>Beard Trim</option>
+        <option>Hair Color</option>
+        <option>Facial</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="date">Appointment Date</label>
+      <input type="date" id="date">
+    </div>
+
+    <!-- BOOK: slot grid -->
+    <div class="form-group" id="bookSlots">
+      <label>Choose a Time Slot</label>
+      <div class="legend">
+        <span class="l-av">Available</span><span class="l-bk">Booked</span><span class="l-se">Selected</span>
+      </div>
+      <div id="slotGrid" class="slot-grid">
+        <p class="slot-note">Please select a date first.</p>
+      </div>
+    </div>
+
+    <!-- CANCEL: time dropdown -->
+    <div class="form-group hidden" id="cancelSlots">
+      <label for="cancelTime">Time of the booking to cancel</label>
+      <select id="cancelTime"></select>
+    </div>
+
+    <button class="btn btn-book" id="btnBook" type="button">Confirm Booking</button>
+    <button class="btn btn-cancel hidden" id="btnCancel" type="button">Cancel My Booking</button>
+
+    <div id="message"></div>
   </div>
 
-  <!-- BOOKING SECTION -->
-  <div id="bookSection" class="form-section active">
-    <form id="bookingForm">
-      <div class="form-group">
-        <label>Customer Name</label>
-        <input type="text" id="bookName" required placeholder="e.g., John Doe">
-      </div>
-
-      <div class="form-group">
-        <label>Mobile Number</label>
-        <input type="tel" id="bookPhone" required placeholder="e.g., 98343948">
-      </div>
-
-      <div class="form-group">
-        <label>Select Service</label>
-        <select id="service" required>
-          <option value="">-- Choose Service --</option>
-          <option value="Hair Cut">Hair Cut</option>
-          <option value="Trimmer">Trimmer</option>
-          <option value="Beard Trim">Beard Trim</option>
-          <option value="Hair Coloring">Hair Coloring</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Appointment Date</label>
-        <input type="date" id="bookDate" required onchange="fetchAvailableSlots()">
-      </div>
-
-      <div class="form-group">
-        <label>Available Time Slots (10:00 AM - 7:00 PM)</label>
-        <select id="bookTime" required>
-          <option value="">-- Select Date First --</option>
-        </select>
-        <div class="slot-legend">Already booked slots will automatically disappear.</div>
-      </div>
-
-      <button type="submit" id="bookBtn">Confirm Booking</button>
-    </form>
+  <div class="gallery">
+    <div style="background-image:url('https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?auto=format&fit=crop&w=400&q=60')"></div>
+    <div style="background-image:url('https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=400&q=60')"></div>
+    <div style="background-image:url('https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=400&q=60')"></div>
   </div>
+  <footer>© Glamour &amp; Co. Salon • Open daily 10:00 AM – 7:00 PM</footer>
+</div>
 
-  <!-- CANCELLATION SECTION -->
-  <div id="cancelSection" class="form-section">
-    <form id="cancelForm">
-      <div class="form-group">
-        <label>Customer Name</label>
-        <input type="text" id="cancelName" required placeholder="Enter your registered name">
-      </div>
+<script>
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzASHjx5UlDiBGTJTlpD1ASwMFUqCIk6YLSoa4ddG6LbsN9P7jQJmcYm_hHHVDXRdz6bA/exec";
 
-      <div class="form-group">
-        <label>Mobile Number</label>
-        <input type="tel" id="cancelPhone" required placeholder="Enter your registered mobile">
-      </div>
+  const ALL_SLOTS = ["10:00 AM","11:00 AM","12:00 PM","01:00 PM","02:00 PM","03:00 PM","04:00 PM","05:00 PM","06:00 PM"];
 
-      <div class="form-group">
-        <label>Appointment Date</label>
-        <input type="date" id="cancelDate" required>
-      </div>
+  let mode = "book";
+  let selectedTime = null;
+  let bookedSlots = [];
 
-      <div class="form-group">
-        <label>Appointment Time Slot</label>
-        <select id="cancelTime" required>
-          <option value="">-- Select Time Slot --</option>
-        </select>
-      </div>
+  const $ = id => document.getElementById(id);
 
-      <button type="submit" class="cancel-btn" id="cancelBtn">Cancel My Booking</button>
-    </form>
-  </div>
+  /* ---------- helpers ---------- */
+  function localDateString(d = new Date()) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
 
-  <script>
-    // ==========================================
-    // PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL BELOW
-    // ==========================================
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwsxFtxCRvrXTS_v2p7Sfdcjve21xqF8NUmHcNWEZBuGCFjTc4IJWQleA8udXSrt7yp0w/exec";
+  function slotToMinutes(slot) {
+    let [time, ap] = slot.split(" ");
+    let [h, m] = time.split(":").map(Number);
+    if (ap === "PM" && h !== 12) h += 12;
+    if (ap === "AM" && h === 12) h = 0;
+    return h * 60 + m;
+  }
 
-    function switchTab(tab) {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
-      
-      if (tab === 'book') {
-        document.querySelectorAll('.tab')[0].classList.add('active');
-        document.getElementById('bookSection').classList.add('active');
+  function isPastSlot(dateStr, slot) {
+    if (dateStr !== localDateString()) return false;
+    const now = new Date();
+    return slotToMinutes(slot) <= now.getHours() * 60 + now.getMinutes();
+  }
+
+  function cleanPhone(v) {
+    let d = String(v).replace(/\D/g, "");
+    if (d.length > 10 && d.startsWith("91")) d = d.slice(2);
+    return d;
+  }
+
+  function validPhone(v) { return /^[6-9]\d{9}$/.test(cleanPhone(v)); }
+
+  function showMessage(text, type) {
+    const box = $("message");
+    box.textContent = text;
+    box.className = text ? `show ${type}` : "";
+  }
+
+  /* ---------- init ---------- */
+  $("date").min = localDateString();
+
+  $("phone").addEventListener("input", () => {
+    const ok = !$("phone").value || validPhone($("phone").value);
+    $("phone").classList.toggle("invalid", !ok);
+    $("phoneHint").textContent = ok ? "" : "Enter a valid 10-digit mobile number (starts with 6-9).";
+  });
+
+  $("cancelTime").innerHTML = ALL_SLOTS.map(t => `<option>${t}</option>`).join("");
+
+  $("date").addEventListener("change", loadSlots);
+  $("tabBook").onclick = () => setMode("book");
+  $("tabCancel").onclick = () => setMode("cancel");
+  $("btnBook").onclick = () => submit("book");
+  $("btnCancel").onclick = () => submit("cancel");
+
+  function setMode(m) {
+    mode = m;
+    const isBook = m === "book";
+    $("tabBook").classList.toggle("active", isBook);
+    $("tabCancel").classList.toggle("active", !isBook);
+    $("serviceGroup").classList.toggle("hidden", !isBook);
+    $("bookSlots").classList.toggle("hidden", !isBook);
+    $("btnBook").classList.toggle("hidden", !isBook);
+    $("cancelSlots").classList.toggle("hidden", isBook);
+    $("btnCancel").classList.toggle("hidden", isBook);
+    showMessage("", "");
+  }
+
+  /* ---------- slots ---------- */
+  async function loadSlots() {
+    const date = $("date").value;
+    if (!date) return;
+    showMessage("Loading available slots...", "info");
+    try {
+      const res = await fetch(SCRIPT_URL + "?t=" + Date.now()); // cache-buster
+      const data = await res.json();
+      bookedSlots = data.booked || [];
+      renderSlots(date);
+      showMessage("", "");
+    } catch (e) {
+      showMessage("Could not load slots. Please check your connection and try again.", "err");
+    }
+  }
+
+  function renderSlots(date) {
+    const grid = $("slotGrid");
+    grid.innerHTML = "";
+    selectedTime = null;
+
+    const visible = ALL_SLOTS.filter(t => !isPastSlot(date, t));
+    if (visible.length === 0) {
+      grid.innerHTML = '<p class="slot-note">No more slots available for this date. Please pick another day.</p>';
+      return;
+    }
+
+    visible.forEach(time => {
+      const isBooked = bookedSlots.some(b => b.date === date && b.time === time);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = time;
+
+      if (isBooked) {
+        btn.className = "slot-btn slot-booked";
+        btn.disabled = true;
+        btn.title = "Already booked";
       } else {
-        document.querySelectorAll('.tab')[1].classList.add('active');
-        document.getElementById('cancelSection').classList.add('active');
+        btn.className = "slot-btn slot-available";
+        btn.onclick = () => {
+          grid.querySelectorAll(".slot-available").forEach(b => b.classList.remove("selected"));
+          btn.classList.add("selected");
+          selectedTime = time;
+        };
       }
-    }
-
-    const todayStr = new Date().toISOString().split('T')[0];
-    document.getElementById('bookDate').min = todayStr;
-    document.getElementById('cancelDate').min = todayStr;
-
-    function generateAllSlots() {
-      let slots = [];
-      let startHour = 10; 
-      let endHour = 19;   
-      
-      for (let h = startHour; h < endHour; h++) {
-        for (let m = 0; m < 60; m += 30) {
-          let hour12 = h > 12 ? h - 12 : (h === 0 ? 12 : h);
-          let ampm = h >= 12 ? 'PM' : 'AM';
-          let minStr = m === 0 ? '00' : '30';
-          slots.push(`${hour12}:${minStr} ${ampm}`);
-        }
-      }
-      return slots;
-    }
-
-    function populateCancelSlots() {
-      const cancelTimeSelect = document.getElementById('cancelTime');
-      cancelTimeSelect.innerHTML = '<option value="">-- Select Time Slot --</option>';
-      const allSlots = generateAllSlots();
-      allSlots.forEach(slot => {
-        let opt = document.createElement('option');
-        opt.value = slot;
-        opt.textContent = slot;
-        cancelTimeSelect.appendChild(opt);
-      });
-    }
-    populateCancelSlots();
-
-    // Fetch available slots using GET to prevent CORS preflight blocks
-    async function fetchAvailableSlots() {
-      const date = document.getElementById('bookDate').value;
-      const timeSelect = document.getElementById('bookTime');
-      
-      if (!date) return;
-
-      timeSelect.innerHTML = '<option value="">Loading available slots...</option>';
-
-      let bookedTimes = [];
-
-      try {
-        const response = await fetch(`${SCRIPT_URL}?action=get_slots&date=${date}`);
-        const result = await response.json();
-        if (result.status === 'success') {
-          bookedTimes = result.bookedTimes || [];
-        }
-      } catch (err) {
-        console.warn("Could not fetch booked slots, displaying all slots as fallback.", err);
-      }
-
-      const allSlots = generateAllSlots();
-      timeSelect.innerHTML = '<option value="">-- Select Time Slot --</option>';
-
-      let availableCount = 0;
-      allSlots.forEach(slot => {
-        if (!bookedTimes.includes(slot)) {
-          let opt = document.createElement('option');
-          opt.value = slot;
-          opt.textContent = slot;
-          timeSelect.appendChild(opt);
-          availableCount++;
-        }
-      });
-
-      if (availableCount === 0) {
-        timeSelect.innerHTML = '<option value="">All slots booked for this date!</option>';
-      }
-    }
-
-    // Booking submission
-    document.getElementById('bookingForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const btn = document.getElementById('bookBtn');
-      btn.disabled = true;
-      btn.innerText = "Processing...";
-
-      const payload = {
-        action: 'book',
-        name: document.getElementById('bookName').value,
-        phone: document.getElementById('bookPhone').value,
-        service: document.getElementById('service').value,
-        date: document.getElementById('bookDate').value,
-        time: document.getElementById('bookTime').value
-      };
-
-      try {
-        const response = await fetch(SCRIPT_URL, {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        });
-        const result = await response.json();
-        alert(result.message);
-        if (result.status === 'success') {
-          document.getElementById('bookingForm').reset();
-          document.getElementById('bookTime').innerHTML = '<option value="">-- Select Date First --</option>';
-        }
-      } catch (err) {
-        alert("Booking failed. Please check your connection.");
-      } finally {
-        btn.disabled = false;
-        btn.innerText = "Confirm Booking";
-      }
+      grid.appendChild(btn);
     });
+  }
 
-    // Cancellation submission
-    document.getElementById('cancelForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const btn = document.getElementById('cancelBtn');
-      btn.disabled = true;
-      btn.innerText = "Processing cancellation...";
+  /* ---------- submit ---------- */
+  async function submit(action) {
+    const name = $("name").value.trim();
+    const phoneRaw = $("phone").value.trim();
+    const service = $("service").value;
+    const date = $("date").value;
+    const time = action === "book" ? selectedTime : $("cancelTime").value;
 
-      const payload = {
-        action: 'cancel',
-        name: document.getElementById('cancelName').value,
-        phone: document.getElementById('cancelPhone').value,
-        date: document.getElementById('cancelDate').value,
-        time: document.getElementById('cancelTime').value
-      };
+    if (!name || !phoneRaw || !date || !time) {
+      showMessage(action === "book"
+        ? "Please fill in all fields and select a time slot."
+        : "Please fill in name, mobile, date and time of the booking.", "err");
+      return;
+    }
+    if (!validPhone(phoneRaw)) {
+      $("phone").classList.add("invalid");
+      $("phoneHint").textContent = "Enter a valid 10-digit mobile number (starts with 6-9).";
+      showMessage("Please enter a valid mobile number.", "err");
+      return;
+    }
+    if (action === "book" && isPastSlot(date, time)) {
+      showMessage("This time has already passed. Please choose another slot.", "err");
+      renderSlots(date);
+      return;
+    }
 
-      try {
-        const response = await fetch(SCRIPT_URL, {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        });
-        const result = await response.json();
-        alert(result.message);
-        if (result.status === 'success') {
-          document.getElementById('cancelForm').reset();
-          populateCancelSlots();
-        }
-      } catch (err) {
-        alert("Cancellation failed. Please check your details.");
-      } finally {
-        btn.disabled = false;
-        btn.innerText = "Cancel My Booking";
-      }
-    });
-  </script>
+    const btn = action === "book" ? $("btnBook") : $("btnCancel");
+    btn.disabled = true;
+    showMessage(action === "book" ? "Booking your appointment..." : "Cancelling your booking...", "info");
+
+    try {
+      const res = await fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({ action, name, phone: cleanPhone(phoneRaw), service, date, time })
+      });
+      const result = await res.json();
+      showMessage(result.message, result.status === "success" ? "ok" : "err");
+      await refreshAfterSubmit(result.status === "success");
+    } catch (e) {
+      showMessage("Network error. Please try again.", "err");
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function refreshAfterSubmit(ok) {
+    const keep = $("message").textContent, cls = $("message").className;
+    await loadSlots();
+    showMessage(keep, cls.replace("show ", ""));
+  }
+</script>
 </body>
 </html>
